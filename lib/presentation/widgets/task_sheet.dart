@@ -1,10 +1,9 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_color/flutter_color.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shamsi_date/extensions.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+
 import 'package:task_par/data/entities/task_category_entity.dart';
 import 'package:task_par/data/entities/task_entity.dart';
 import 'package:task_par/data/entities/task_with_category_entity.dart';
@@ -14,9 +13,7 @@ import 'package:task_par/presentation/utils/app_theme.dart';
 import 'package:task_par/presentation/utils/constants.dart';
 import 'package:task_par/presentation/utils/extensions.dart';
 import 'package:task_par/presentation/utils/helper.dart';
-import 'package:task_par/presentation/widgets/jalali_table_widget/src/jalaliCalendarPicker.dart';
-
-// import 'package:persian_datetime_picker/persian_datetime_picker.dart';
+import 'package:shamsi_date/shamsi_date.dart' as shamsi;
 
 import 'buttons.dart';
 import 'state_widgets.dart';
@@ -46,6 +43,8 @@ class _TaskSheetState extends State<TaskSheet> {
   TimeOfDay? timePicked;
   bool isCompleted = false;
   bool isEdited = false;
+  GetStorage getStorage = GetStorage();
+  List countTasks = [];
 
   @override
   void initState() {
@@ -62,6 +61,8 @@ class _TaskSheetState extends State<TaskSheet> {
           : null;
       isCompleted = taskItem.isCompleted;
     } else {
+      countTasks = getStorage.read(Keys.listTaskKey);
+      print('countTasks$countTasks');
       titleController = TextEditingController();
       descriptionController = TextEditingController();
     }
@@ -76,68 +77,62 @@ class _TaskSheetState extends State<TaskSheet> {
     super.dispose();
   }
 
-  _deleteTask() {
-    showDialog<bool>(
-      context: context,
-      builder: (context) =>
-          // FilterWrapper(
-          // blurAmount: 5,
-          // child:
-          AlertDialog(
-        title: Text("Delete the task?", style: AppTheme.headline3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GarbageWidget(),
-            SizedBox(height: 20),
-            Text(
-              'Are you sure want to delete the task?',
-              style: AppTheme.text1,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                'Cancel',
-                style: AppTheme.text1,
-              )),
-          TextButton(
-            onPressed: () {
-              context.read<TaskBloc>().add(DeleteTask(id: taskItem.id!));
-              Helper.showCustomSnackBar(
-                context,
-                content: 'Success Delete Task',
-                bgColor: AppTheme.redPastel.lighter(30),
-              );
-              Navigator.pop(context, true);
-            },
-            child: Text(
-              'Delete',
-              style: AppTheme.text1.withPurple,
-            ),
-          ),
-        ],
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        clipBehavior: Clip.antiAlias,
-      ),
-      // ),
-    ).then((isDelete) {
-      if (isDelete != null && isDelete) {
-        Navigator.pop(context);
-      }
-    });
-  }
-
-  _markAsDone() {
-    isCompleted = true;
-    _updateTask();
-  }
+  // _deleteTask() {
+  //   showDialog<bool>(
+  //     context: context,
+  //     builder: (context) =>
+  //         // FilterWrapper(
+  //         // blurAmount: 5,
+  //         // child:
+  //         AlertDialog(
+  //       title: Text("Delete the task?", style: AppTheme.headline3),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           GarbageWidget(),
+  //           SizedBox(height: 20),
+  //           Text(
+  //             'Are you sure want to delete the task?',
+  //             style: AppTheme.text1,
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //             onPressed: () => Navigator.pop(context, false),
+  //             child: Text(
+  //               'Cancel',
+  //               style: AppTheme.text1,
+  //             )),
+  //         TextButton(
+  //           onPressed: () {
+  //             context.read<TaskBloc>().add(DeleteTask(id: taskItem.id!));
+  //             Helper.showCustomSnackBar(
+  //               context,
+  //               content: 'Success Delete Task',
+  //             );
+  //             Navigator.pop(context, true);
+  //           },
+  //           child: Text(
+  //             'Delete',
+  //             style: AppTheme.text1.withPurple,
+  //           ),
+  //         ),
+  //       ],
+  //       insetPadding:
+  //           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(20),
+  //       ),
+  //       clipBehavior: Clip.antiAlias,
+  //     ),
+  //     // ),
+  //   ).then((isDelete) {
+  //     if (isDelete != null && isDelete) {
+  //       Navigator.pop(context);
+  //     }
+  //   });
+  // }
 
   _updateTask() {
     if (_formKey.currentState!.validate()) {
@@ -170,8 +165,7 @@ class _TaskSheetState extends State<TaskSheet> {
       context.read<TaskBloc>().add(UpdateTask(taskItemEntity: taskItemEntity));
       Helper.showCustomSnackBar(
         context,
-        content: 'Success Update Task',
-        bgColor: AppTheme.greenPastel,
+        content: ' تسک ${taskItem.title} با موفقیت ویرایش شد ',
       );
       Navigator.pop(context);
     }
@@ -203,18 +197,26 @@ class _TaskSheetState extends State<TaskSheet> {
       context.read<TaskBloc>().add(InsertTask(taskItemEntity: taskItemEntity));
       Helper.showCustomSnackBar(
         context,
-        content: 'Success Add Task',
-        bgColor: AppTheme.lightPurple.lighter(30),
+        content: ' تسک ${titleController.text} تسک با موفقیت افزوده شد ',
       );
+      countTasks.add(1);
+      getStorage.write(Keys.listTaskKey, countTasks);
       Navigator.pop(context);
     }
   }
 
   _getDate() async {
     Helper.unfocus();
-    var picked = await jalaliCalendarPicker(
-        convertToGregorian: true, context: context); // نمایش خروجی به صورت شمسی
-    print(picked);
+    Jalali? picked = await showPersianDatePicker(
+      context: context,
+      // initialDate:datePicked.?? Jalali.now(),
+      initialDate: Jalali.fromDateTime(datePicked ?? DateTime.now()),
+      firstDate: Jalali(1385, 8),
+      lastDate: Jalali(1450, 9),
+    );
+    // var picked = await jalaliCalendarPicker(
+    //     convertToGregorian: true, context: context); // نمایش خروجی به صورت شمسی
+    // print(picked);
 
     // setState(() {
     //   datePicked = DateTime.parse(picked!);
@@ -230,8 +232,9 @@ class _TaskSheetState extends State<TaskSheet> {
     if (picked != null) {
       setState(() {
         print(picked.runtimeType);
-        datePicked = DateTime.parse(picked);
-        // datePicked = picked.toDateTime();
+        // datePicked = DateTime.parse(picked);
+        datePicked = picked.toDateTime();
+
         print(datePicked);
       });
     }
@@ -320,7 +323,7 @@ class _TaskSheetState extends State<TaskSheet> {
                                 style: AppTheme.text1.withBlack,
                                 controller: titleController,
                                 decoration: InputDecoration(
-                                  labelText: 'عنوان تسک',
+                                  hintText: 'عنوان تسک',
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -346,7 +349,10 @@ class _TaskSheetState extends State<TaskSheet> {
                                     onTap: _getDate,
                                     text: datePicked != null
                                         ? Helper.formatDataJalaliHeader(
-                                            datePicked!.toJalali())
+                                            shamsi.Jalali.fromDateTime(
+                                                datePicked!)
+                                            // datePicked!.toJalali()
+                                            )
                                         : 'تاریخ',
                                     prefixWidget: SvgPicture.asset(
                                         Resources.date,
@@ -398,67 +404,75 @@ class _TaskSheetState extends State<TaskSheet> {
                               ]),
                               SizedBox(height: 20),
                               state is TaskCategorySuccess
-                                  ? DropdownButtonFormField<int>(
-                                      decoration: InputDecoration(
-                                        hintText: 'دسته بندی',
-                                      ),
-                                      validator: (value) {
-                                        if (value == null) {
-                                          return 'دسته بندی رو فراموش کردی وارد کنی';
-                                        }
-                                        return null;
-                                      },
-                                      onTap: () => Helper.unfocus(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          selectedCategory = value;
-                                        });
-                                      },
-                                      items: state.entity.taskCategoryList
-                                          .map((e) {
-                                        final brightness = ThemeData
-                                            .estimateBrightnessForColor(
-                                                e.backgroundColor);
-                                        final backColorBri =
-                                            brightness == Brightness.light
-                                                ? Colors.black
-                                                : e.backgroundColor;
-                                        return DropdownMenuItem(
-                                          value: e.id,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                IconData(e.icon.icon!.codePoint,
-                                                    fontFamily:
-                                                        'MaterialIcons'),
-                                                color: backColorBri,
-                                              ),
-                                              SizedBox(
-                                                width: 5,
-                                              ),
-                                              SizedBox(
-                                                width: 100,
-                                                child: Text(
-                                                  e.title,
-                                                  style: TextStyle(
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      fontFamily: 'IRANSans'),
-                                                ),
-                                              ),
-                                            ],
+                                  ? state.entity.taskCategoryList.isEmpty
+                                      ? Text(
+                                          'دسته بندی وجود ندارد ، ابتدا یک دسته بندی ایجاد کنید',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: Colors.red),
+                                        )
+                                      : DropdownButtonFormField<int>(
+                                          decoration: InputDecoration(
+                                            hintText: 'دسته بندی',
                                           ),
-                                        );
-                                      }).toList(),
-                                      style: AppTheme.text1.withBlack,
-                                      value: selectedCategory,
-                                    )
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return 'دسته بندی رو فراموش کردی وارد کنی';
+                                            }
+                                            return null;
+                                          },
+                                          onTap: () => Helper.unfocus(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              selectedCategory = value;
+                                            });
+                                          },
+                                          items: state.entity.taskCategoryList
+                                              .map((e) {
+                                            final brightness = ThemeData
+                                                .estimateBrightnessForColor(
+                                                    e.backgroundColor);
+                                            final backColorBri =
+                                                brightness == Brightness.light
+                                                    ? Colors.black
+                                                    : e.backgroundColor;
+                                            return DropdownMenuItem(
+                                              value: e.id,
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    IconData(
+                                                        e.icon.icon!.codePoint,
+                                                        fontFamily:
+                                                            'MaterialIcons'),
+                                                    color: backColorBri,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 5,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 100,
+                                                    child: Text(
+                                                      e.title,
+                                                      style: TextStyle(
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          fontFamily:
+                                                              'IRANSans'),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }).toList(),
+                                          style: AppTheme.text1.withBlack,
+                                          value: selectedCategory,
+                                        )
                                   : Container(),
                               SizedBox(height: 20),
                               PinkButton(
                                 text: widget.isEditing ? 'ویرایش' : 'افزودن',
                                 onTap:
-                                    widget.isEditing ? _markAsDone : _saveTask,
+                                    widget.isEditing ? _updateTask : _saveTask,
                               ),
                               SizedBox(height: 20),
                             ],

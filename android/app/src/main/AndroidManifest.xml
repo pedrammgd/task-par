@@ -1,7 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.task_par">
-   <application
-        android:label="task_par"
+
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:label="Task Par"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

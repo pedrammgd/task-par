@@ -103,19 +103,19 @@ class _CalendarPageState extends State<CalendarPage> {
                     return ValueListenableBuilder<int>(
                       valueListenable: totalTask,
                       builder: (context, value, child) => value == 0
-                          ? SizedBox()
+                          ? const SizedBox()
                           : Positioned(
-                              top: -2,
+                              top: 0,
                               left: 0,
                               child: Container(
                                 decoration: BoxDecoration(
-                                    color: Colors.blue[200],
+                                    color: Colors.red[200],
                                     shape: BoxShape.circle),
                                 padding: value >= 10
-                                    ? const EdgeInsets.all(4.0)
+                                    ? const EdgeInsets.all(2.0)
                                     : const EdgeInsets.all(6.0),
                                 child: Text(
-                                    value >= 10 ? '10>' : value.toString()),
+                                    value >= 10 ? '<10' : value.toString()),
 
                                 // Text((events?.length).toString()),
                               ),

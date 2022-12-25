@@ -1,44 +1,36 @@
 import 'dart:io';
+
 import 'package:auto_animated/auto_animated.dart';
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:day_night_time_picker/lib/constants.dart';
-
-import 'package:flutter/cupertino.dart';
+import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:task_par/data/entities/task_with_category_entity.dart';
 import 'package:task_par/logic/blocs/task_category/task_category_bloc.dart';
+import 'package:task_par/presentation/pages/pages.dart';
 import 'package:task_par/presentation/widgets/task_sheet.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+
 import 'utils.dart';
 
 class Helper {
-  static showCustomSnackBar(BuildContext context,
-      {required String content, required Color bgColor}) {
-    final materialBanner = MaterialBanner(
-      /// need to set following properties for best effect of awesome_snackbar_content
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      forceActionsBelow: true,
-      content: AwesomeSnackbarContent(
-        title: 'Oh Hey!!',
-        message:
-            'This is an example error message that will be shown in the body of materialBanner!',
+  static GetStorage getStorageStatic = GetStorage();
 
-        /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
-        contentType: ContentType.success,
-        // to configure for material banner
-        inMaterialBanner: true,
+  static showCustomSnackBar(
+    BuildContext context, {
+    required String content,
+  }) {
+    showTopSnackBar(
+      Overlay.of(context)!,
+      CustomSnackBar.success(
+        message: content,
       ),
-      actions: const [SizedBox.shrink()],
     );
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentMaterialBanner()
-      ..showMaterialBanner(materialBanner);
-
     // final snackBar = SnackBar(
     //   content: Text(
     //     content,
@@ -59,20 +51,70 @@ class Helper {
     TaskWithCategoryItemEntity? task,
     int? categoryId,
     bool isUpdate = false,
-  }) {
-    context.read<TaskCategoryBloc>().add(GetTaskCategory());
-    showCupertinoModalBottomSheet(
-      expand: false,
-      context: context,
-      enableDrag: true,
-      topRadius: Radius.circular(20),
-      backgroundColor: Colors.transparent,
-      builder: (context) => TaskSheet(
-        task: task,
-        categoryId: categoryId,
-        isEditing: isUpdate,
-      ),
-    );
+  }) async {
+    bool isInstalled =
+        await DeviceApps.isAppInstalled('com.example.factor_flutter_mobile');
+
+    if (subscriptionCondition(isInstalled)) {
+      context.read<TaskCategoryBloc>().add(GetTaskCategory());
+      showCupertinoModalBottomSheet(
+        expand: false,
+        context: context,
+        enableDrag: true,
+        topRadius: Radius.circular(20),
+        backgroundColor: Colors.transparent,
+        builder: (context) => TaskSheet(
+          task: task,
+          categoryId: categoryId,
+          isEditing: isUpdate,
+        ),
+      );
+    } else {
+      showCupertinoModalBottomSheet(
+        expand: false,
+        context: context,
+        enableDrag: true,
+        topRadius: Radius.circular(20),
+        backgroundColor: Colors.transparent,
+        builder: (context) => SizedBox(
+            width: 400,
+            child: ProfilePage(
+              isBottomSheet: true,
+            )),
+      );
+    }
+  }
+
+  static bool subscriptionCondition(bool isFactorParInstaller) {
+    if (getStorageStatic.read(Keys.myNameKey) == 'نگین جوکار' ||
+        getStorageStatic.read(Keys.myNameKey) == 'پرنیا مجرد') {
+      return true;
+    }
+    if (isFactorParInstaller) {
+      return true;
+    }
+
+    if (getStorageStatic.read(Keys.subscriptionKey) == 'bronze_buy') {
+      if (getStorageStatic.read(Keys.listTaskKey).length ?? 0 >= 29) {
+        return false;
+      } else {
+        return true;
+      }
+    } else if (getStorageStatic.read(Keys.subscriptionKey) == 'silver') {
+      if (getStorageStatic.read(Keys.listTaskKey).length ?? 0 >= 59) {
+        return false;
+      } else {
+        return true;
+      }
+    } else if (getStorageStatic.read(Keys.subscriptionKey) == 'gold') {
+      return true;
+    } else {
+      if (getStorageStatic.read(Keys.listTaskKey).length < 3) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   }
 
   // static Future<DateTime?> showDeadlineDatePicker(

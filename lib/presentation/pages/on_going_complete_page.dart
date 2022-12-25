@@ -26,7 +26,7 @@ class OnGoingCompletePage extends StatefulWidget {
 class _OnGoingCompletePageState extends State<OnGoingCompletePage> {
   late StatusType statusType = widget.bundle.extras[Keys.statusType];
   late String title =
-      statusType == StatusType.ON_GOING ? 'On Going' : 'Complete';
+      statusType == StatusType.ON_GOING ? 'در حال انجام' : 'انجام شده';
   LinearGradient randomGradient =
       LinearGradient(colors: []).randomGradientColor;
 
@@ -41,23 +41,24 @@ class _OnGoingCompletePageState extends State<OnGoingCompletePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black,
+        child: Icon(Icons.add),
+        onPressed: () {
+          Helper.showBottomSheet(
+            context,
+          );
+        },
+      ),
       body: CustomScrollView(
         physics: BouncingScrollPhysics(),
         slivers: [
           WideAppBar(
             tag: statusType.toString(),
             title: title,
-            gradient: randomGradient.colors[0],
-            actions: [
-              IconButton(
-                icon: Icon(Icons.edit),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () => Helper.showBottomSheet(context),
-              ),
-            ],
+            gradient: statusType == StatusType.ON_GOING
+                ? AppTheme.orange.withOpacity(0.8)
+                : AppTheme.green.withOpacity(0.8),
             child: Column(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -71,7 +72,7 @@ class _OnGoingCompletePageState extends State<OnGoingCompletePage> {
                 Column(
                   children: [
                     Text(
-                      'Your $title Tasks',
+                      'تسک های $title من',
                       style: AppTheme.headline1.withWhite,
                     ),
                     SizedBox(
@@ -81,7 +82,7 @@ class _OnGoingCompletePageState extends State<OnGoingCompletePage> {
                         valueListenable: totalTasks,
                         builder: (context, value, child) {
                           return Text(
-                            'Total Tasks $value',
+                            'تعدادشون $value',
                             style: AppTheme.text1.withWhite,
                           );
                         }),
@@ -126,7 +127,10 @@ class _OnGoingCompletePageState extends State<OnGoingCompletePage> {
                 } else if (snapshot.data!.taskWithCategoryList.isEmpty) {
                   return EmptyWidget();
                 }
-                return taskListView(snapshot.data!);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 64),
+                  child: taskListView(snapshot.data!),
+                );
               },
             );
           }

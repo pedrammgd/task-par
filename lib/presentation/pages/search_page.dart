@@ -133,7 +133,7 @@ class _SearchPageState extends State<SearchPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          ' پیدا شدن ${data.taskWithCategoryList.length} تسک در $searchQuery',
+          ' پیدا شدن ${data.taskWithCategoryList.length} تسک با نام $searchQuery',
           style: AppTheme.text1,
           textAlign: TextAlign.start,
         ),

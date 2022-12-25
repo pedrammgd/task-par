@@ -51,7 +51,9 @@ class Keys {
   static const String heroStatus = 'heroStatus';
   static const String statusType = 'statusType';
   static const String avatarKey = 'avatarKey';
-  static const String subscriptionKey = 'avatarKey';
+  static const String subscriptionKey = 'subscriptionKey';
+  static const String myNameKey = 'myNameKey';
+  static const String listTaskKey = 'listTaskKey';
 
   static const String heroSearch = 'Search Hero';
 }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
@@ -85,9 +84,9 @@ class _CategorySheetState extends State<CategorySheet> {
           ));
       Helper.showCustomSnackBar(
         context,
-        content: 'taskItemEntityMMUU${taskItemEntity.title}',
-        bgColor: AppTheme.lightPurple,
+        content: ' دسته بندی ${taskItemEntity.title} با موفقیت ویرایش شد ',
       );
+
       Navigator.pop(context);
       Navigator.pop(context);
     }
@@ -109,56 +108,56 @@ class _CategorySheetState extends State<CategorySheet> {
     }
   }
 
-  _getDate() async {
-    Helper.unfocus();
-    var picked = await jalaliCalendarPicker(
-        convertToGregorian: true, context: context); // نمایش خروجی به صورت شمسی
-    print(picked);
+  // _getDate() async {
+  //   Helper.unfocus();
+  //   var picked = await jalaliCalendarPicker(
+  //       convertToGregorian: true, context: context); // نمایش خروجی به صورت شمسی
+  //   print(picked);
+  //
+  //   // setState(() {
+  //   //   datePicked = DateTime.parse(picked!);
+  //   //   print(datePicked);
+  //   // });
+  //
+  //   // Jalali? picked = await showPersianDatePicker(
+  //   //   context: context,
+  //   //   initialDate: Jalali.now(),
+  //   //   firstDate: Jalali(1385, 8),
+  //   //   lastDate: Jalali(1450, 9),
+  //   // );
+  //   if (picked != null) {
+  //     setState(() {
+  //       print(picked.runtimeType);
+  //       datePicked = DateTime.parse(picked);
+  //       // datePicked = picked.toDateTime();
+  //       print(datePicked);
+  //     });
+  //   }
+  //   // final picked = await Helper.showDeadlineDatePicker(
+  //   //   context,
+  //   //   datePicked ?? DateTime.now(),
+  //   // );
+  //   // if (picked != null && picked != datePicked) {
+  //   //   setState(() {
+  //   //     datePicked = picked;
+  //   //   });
+  //   // }
+  // }
 
-    // setState(() {
-    //   datePicked = DateTime.parse(picked!);
-    //   print(datePicked);
-    // });
-
-    // Jalali? picked = await showPersianDatePicker(
-    //   context: context,
-    //   initialDate: Jalali.now(),
-    //   firstDate: Jalali(1385, 8),
-    //   lastDate: Jalali(1450, 9),
-    // );
-    if (picked != null) {
-      setState(() {
-        print(picked.runtimeType);
-        datePicked = DateTime.parse(picked);
-        // datePicked = picked.toDateTime();
-        print(datePicked);
-      });
-    }
-    // final picked = await Helper.showDeadlineDatePicker(
-    //   context,
-    //   datePicked ?? DateTime.now(),
-    // );
-    // if (picked != null && picked != datePicked) {
-    //   setState(() {
-    //     datePicked = picked;
-    //   });
-    // }
-  }
-
-  _getTime() {
-    Helper.unfocus();
-    Helper.showDeadlineTimePicker(
-      context,
-      timePicked ?? TimeOfDay.now(),
-      onTimeChanged: (TimeOfDay timeOfDay) {
-        if (timeOfDay != timePicked) {
-          setState(() {
-            timePicked = timeOfDay;
-          });
-        }
-      },
-    );
-  }
+  // _getTime() {
+  //   Helper.unfocus();
+  //   Helper.showDeadlineTimePicker(
+  //     context,
+  //     timePicked ?? TimeOfDay.now(),
+  //     onTimeChanged: (TimeOfDay timeOfDay) {
+  //       if (timeOfDay != timePicked) {
+  //         setState(() {
+  //           timePicked = timeOfDay;
+  //         });
+  //       }
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {

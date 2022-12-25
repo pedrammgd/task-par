@@ -1,12 +1,8 @@
-import 'dart:ui';
-
 import 'package:auto_animated/auto_animated.dart';
 import 'package:dotted_border/dotted_border.dart';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_color/flutter_color.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
@@ -14,29 +10,24 @@ import 'package:random_avatar/random_avatar.dart';
 import 'package:shamsi_date/shamsi_date.dart';
 import 'package:task_par/data/entities/category_total_tasks_entity.dart';
 import 'package:task_par/data/entities/task_category_entity.dart';
-import 'package:task_par/data/entities/task_entity.dart';
 import 'package:task_par/data/entities/task_with_category_entity.dart';
 import 'package:task_par/logic/blocs/task/task_bloc.dart';
 import 'package:task_par/logic/blocs/task_category/task_category_bloc.dart';
 import 'package:task_par/presentation/routes/argument_bundle.dart';
 import 'package:task_par/presentation/routes/page_path.dart';
-import 'package:task_par/presentation/utils/app_theme.dart';
-import 'package:task_par/presentation/utils/constants.dart';
-import 'package:task_par/presentation/utils/helper.dart';
 import 'package:task_par/presentation/utils/utils.dart';
 import 'package:task_par/presentation/widgets/category_sheet.dart';
 import 'package:task_par/presentation/widgets/state_widgets.dart';
 import 'package:task_par/presentation/widgets/task_item_widget.dart';
-import 'package:task_par/presentation/widgets/task_sheet.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
   _DashboardPageState createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage>
-    with AutomaticKeepAliveClientMixin {
+class _DashboardPageState extends State<DashboardPage> {
   late String avatar;
+  late String myName;
   GetStorage getStorage = GetStorage();
 
   @override
@@ -46,6 +37,8 @@ class _DashboardPageState extends State<DashboardPage>
     //   trBackground: false,
     // );
     setAvatar();
+    myName = getStorage.read(Keys.myNameKey) ?? '';
+
     setInitialCategory();
     context.read<TaskCategoryBloc>().add(WatchTaskCategory());
     context.read<TaskBloc>().add(WatchOnGoingTask());
@@ -64,6 +57,7 @@ class _DashboardPageState extends State<DashboardPage>
   void setInitialCategory() {
     bool isInitial = getStorage.read(Keys.isInitial) ?? true;
     if (isInitial) {
+      getStorage.write(Keys.listTaskKey, []);
       context.read<TaskCategoryBloc>().add(InsertTaskCategory(
             taskCategoryItemEntity: TaskCategoryItemEntity(
                 backgroundColor: Colors.deepOrange,
@@ -73,7 +67,7 @@ class _DashboardPageState extends State<DashboardPage>
           ));
       context.read<TaskCategoryBloc>().add(InsertTaskCategory(
             taskCategoryItemEntity: TaskCategoryItemEntity(
-                backgroundColor: Colors.brown,
+                backgroundColor: Colors.black,
                 title: "کار",
                 gradient: AppTheme.toscaGradient,
                 icon: Icon(Icons.work_outline)),
@@ -112,7 +106,6 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
@@ -121,15 +114,7 @@ class _DashboardPageState extends State<DashboardPage>
             child: Column(
               children: [
                 _avatar(),
-                InkWell(
-                    onTap: () {
-                      Helper.showCustomSnackBar(
-                        context,
-                        content: 'حذف با موفقیت انجام شد',
-                        bgColor: AppTheme.redPastel.lighter(30),
-                      );
-                    },
-                    child: Text('ss')),
+
                 // _topBar(),
                 _myTasks(),
                 _onGoing(),
@@ -175,7 +160,7 @@ class _DashboardPageState extends State<DashboardPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'سلام 👋',
+                ' سلام $myName 👋',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(
@@ -189,9 +174,28 @@ class _DashboardPageState extends State<DashboardPage>
               ),
             ],
           ),
+          Spacer(),
+          Image.asset(
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+              loadSubscriptionWidget(
+                  subscriptionData: getStorage.read(Keys.subscriptionKey))),
         ],
       ),
     );
+  }
+
+  String loadSubscriptionWidget({required String subscriptionData}) {
+    if (subscriptionData == 'bronze_buy') {
+      return 'assets/img/bronze-cup.png';
+    } else if (subscriptionData == 'silver') {
+      return 'assets/img/silver-cup.png';
+    } else if (subscriptionData == 'gold') {
+      return 'assets/img/gold_cup.png';
+    } else {
+      return 'assets/img/coffee-cup.png';
+    }
   }
 
   _topBar() {
@@ -315,7 +319,10 @@ class _DashboardPageState extends State<DashboardPage>
               } else if (!snapshot.hasData) {
                 return LoadingWidget();
               } else if (snapshot.data!.categoryTotalTaskList.isEmpty) {
-                return EmptyWidget();
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: _addBorderButtonCategory(isEmpty: true),
+                );
               }
               return Column(
                 children: [
@@ -386,32 +393,6 @@ class _DashboardPageState extends State<DashboardPage>
                                                             index]
                                                         .totalTasks,
                                                     index,
-                                                    hasMore: index != 0 &&
-                                                        index != 1 &&
-                                                        index != 2,
-                                                    itemPopUp: [
-                                                      'ویرایش',
-                                                      'حذف'
-                                                    ],
-                                                    onSelectedMore: (value) {
-                                                      if (value == 'ویرایش') {
-                                                        _onTapAddOrEditCategory(
-                                                            category: snapshot
-                                                                .data!
-                                                                .categoryTotalTaskList[
-                                                                    index]
-                                                                .taskCategoryItemEntity,
-                                                            isEditing: true);
-                                                      } else {
-                                                        _deleteCategory(
-                                                            taskCategoryItemEntity:
-                                                                snapshot
-                                                                    .data!
-                                                                    .categoryTotalTaskList[
-                                                                        index]
-                                                                    .taskCategoryItemEntity);
-                                                      }
-                                                    },
                                                     openFromDialog: true,
                                                   ),
                                                 );
@@ -489,11 +470,7 @@ class _DashboardPageState extends State<DashboardPage>
 
                     return Column(
                       children: [
-                        taskListView(snapshot.data!, itemPopUp: [
-                          'ویرایش',
-                          'حذف',
-                          'انتقال به انجام شده ها',
-                        ]),
+                        taskListView(snapshot.data!),
                         if (snapshot.data!.taskWithCategoryList.length > 3)
                           TextButton(
                             onPressed: _goToOnGoingPage,
@@ -558,11 +535,7 @@ class _DashboardPageState extends State<DashboardPage>
                       // mainAxisSize: MainAxisSize.min,
                       // crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        taskListView(snapshot.data!, itemPopUp: [
-                          'ویرایش',
-                          'حذف',
-                          'بازگشت به در حال انجام',
-                        ]),
+                        taskListView(snapshot.data!),
                         if (snapshot.data!.taskWithCategoryList.length > 3)
                           TextButton(
                             onPressed: _goToCompletePage,
@@ -593,6 +566,7 @@ class _DashboardPageState extends State<DashboardPage>
     return SizedBox(
       height: 150,
       child: ListView(
+        padding: EdgeInsets.symmetric(horizontal: 16),
         shrinkWrap: true,
         clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
@@ -615,44 +589,48 @@ class _DashboardPageState extends State<DashboardPage>
           SizedBox(
             width: 8,
           ),
-          DottedBorder(
-            borderType: BorderType.RRect,
-            radius: Radius.circular(16),
-            // padding: EdgeInsets.all(6),
-            // strokeCap: StrokeCap.butt,
-            dashPattern: [8, 4],
-            strokeWidth: 2,
-            child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(16)),
-              child: Container(
-                width: MediaQuery.of(context).size.width / 2.5,
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'افزودن دسته بندی',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Icon(
-                        Icons.add,
-                        size: 28,
-                      ),
-                    ]),
-              ).addRipple(
-                onTap: () {
-                  _onTapAddOrEditCategory();
-                },
-              ),
-            ),
-          ),
+          _addBorderButtonCategory(),
           SizedBox(
             width: 8,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _addBorderButtonCategory({bool isEmpty = false}) {
+    return DottedBorder(
+      borderType: BorderType.RRect,
+      radius: Radius.circular(16),
+      // padding: EdgeInsets.all(6),
+      // strokeCap: StrokeCap.butt,
+      dashPattern: [8, 4],
+      strokeWidth: 2,
+      child: ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        child: Container(
+          width: isEmpty
+              ? MediaQuery.of(context).size.width
+              : MediaQuery.of(context).size.width / 2.5,
+          padding: EdgeInsets.all(12),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(
+              'افزودن دسته بندی',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Icon(
+              Icons.add,
+              size: 28,
+            ),
+          ]),
+        ).addRipple(
+          onTap: () {
+            _onTapAddOrEditCategory();
+          },
+        ),
       ),
     );
   }
@@ -677,11 +655,12 @@ class _DashboardPageState extends State<DashboardPage>
   // }
 
   Widget taskCategoryItemWidget(
-      TaskCategoryItemEntity categoryItem, int totalTasks, int index,
-      {bool hasMore = false,
-      bool openFromDialog = false,
-      void Function(String)? onSelectedMore,
-      List<String>? itemPopUp}) {
+    TaskCategoryItemEntity categoryItem,
+    int totalTasks,
+    int index, {
+    bool hasMore = false,
+    bool openFromDialog = false,
+  }) {
     final brightness =
         ThemeData.estimateBrightnessForColor(categoryItem.backgroundColor);
     final backColorBri =
@@ -713,8 +692,15 @@ class _DashboardPageState extends State<DashboardPage>
                   side: const BorderSide(color: Colors.white, width: 1),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                onSelected: onSelectedMore,
-                itemBuilder: (context) => itemPopUp!
+                onSelected: (value) {
+                  if (value == 'ویرایش') {
+                    _onTapAddOrEditCategory(
+                        category: categoryItem, isEditing: true);
+                  } else {
+                    _deleteCategory(taskCategoryItemEntity: categoryItem);
+                  }
+                },
+                itemBuilder: (context) => ['ویرایش', 'حذف']
                     .map((e) => PopupMenuItem<String>(
                           value: e,
                           child: Text(
@@ -793,7 +779,7 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  Widget taskListView(TaskWithCategoryEntity data, {List<String>? itemPopUp}) {
+  Widget taskListView(TaskWithCategoryEntity data) {
     return LiveList.options(
       options: Helper.options,
       // itemCount: data.taskWithCategoryList.length,
@@ -805,29 +791,9 @@ class _DashboardPageState extends State<DashboardPage>
       itemBuilder: (context, index, animation) {
         final item = data.taskWithCategoryList[index];
         return TaskItemWidget(
-          onSelectedPopUp: (value) {
-            switch (value) {
-              case 'ویرایش':
-                _onTapCard(item.taskItemEntity, item.taskCategoryItemEntity);
-                break;
-              case 'حذف':
-                _deleteTask(item.taskItemEntity, item.taskCategoryItemEntity);
-                break;
-
-              case 'انتقال به انجام شده ها':
-                completeOrInProgressTask(item.taskItemEntity, true);
-                break;
-              case 'بازگشت به در حال انجام':
-                completeOrInProgressTask(item.taskItemEntity, false);
-                break;
-            }
-          },
-          itemPopUp: itemPopUp,
           task: item.taskItemEntity,
           category: item.taskCategoryItemEntity,
           animation: animation,
-          onTapCard: () =>
-              _onTapCard(item.taskItemEntity, item.taskCategoryItemEntity),
         );
       },
     );
@@ -849,139 +815,6 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  void _onTapCard(TaskItemEntity task, TaskCategoryItemEntity category) {
-    context.read<TaskCategoryBloc>().add(GetTaskCategory());
-    showCupertinoModalBottomSheet(
-      expand: false,
-      context: context,
-      enableDrag: true,
-      topRadius: Radius.circular(20),
-      backgroundColor: Colors.transparent,
-      builder: (context) => TaskSheet(
-          isEditing: true,
-          task: TaskWithCategoryItemEntity(
-            taskItemEntity: task,
-            taskCategoryItemEntity: category,
-          )),
-    );
-  }
-
-  void _deleteTask(
-      TaskItemEntity task, TaskCategoryItemEntity taskCategoryItemEntity) {
-    showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("حذف تسک", style: AppTheme.headline3),
-            Icon(
-                IconData(taskCategoryItemEntity.icon.icon!.codePoint,
-                    fontFamily: 'MaterialIcons'),
-                color: taskCategoryItemEntity.backgroundColor),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GarbageWidget(),
-            SizedBox(height: 20),
-            Row(
-              children: [
-                Text(
-                  'آیا از حذف',
-                  style: AppTheme.text1,
-                ),
-                Flexible(
-                  child: Text(
-                    ' ${task.title}',
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.text1.copyWith(color: Colors.red),
-                  ),
-                ),
-                Text(
-                  ' مطمعن هستید',
-                  style: AppTheme.text1,
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                'بیخیال',
-                style: AppTheme.text1,
-              )),
-          TextButton(
-            onPressed: () {
-              context.read<TaskBloc>().add(DeleteTask(id: task.id!));
-              Helper.showCustomSnackBar(
-                context,
-                content: 'حذف با موفقیت انجام شد',
-                bgColor: AppTheme.redPastel.lighter(30),
-              );
-              Navigator.pop(context);
-            },
-            child: Text(
-              'حذف',
-              style: AppTheme.text1.copyWith(color: Colors.red),
-            ),
-          ),
-        ],
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        clipBehavior: Clip.antiAlias,
-      ),
-    ).then((isDelete) {
-      if (isDelete != null && isDelete) {
-        Navigator.pop(context);
-      }
-    });
-  }
-
-  void completeOrInProgressTask(TaskItemEntity taskItem, bool isCompleted) {
-    TaskItemEntity taskItemEntity = TaskItemEntity(
-      id: taskItem.id,
-      title: taskItem.title,
-      description: taskItem.description,
-      categoryId: taskItem.categoryId,
-      isCompleted: isCompleted,
-    );
-    if (taskItem.deadline != null) {
-      final DateTime savedDeadline = DateTime(
-        taskItem.deadline!.year,
-        taskItem.deadline!.month,
-        taskItem.deadline!.day,
-        taskItem.deadline != null
-            ? taskItem.deadline!.hour
-            : DateTime.now().hour,
-        taskItem.deadline != null
-            ? taskItem.deadline!.minute
-            : DateTime.now().minute,
-      );
-
-      taskItemEntity = TaskItemEntity(
-        id: taskItem.id,
-        title: taskItem.title,
-        description: taskItem.description,
-        categoryId: taskItem.categoryId,
-        deadline: savedDeadline.toLocal(),
-        isCompleted: isCompleted,
-      );
-    }
-    context.read<TaskBloc>().add(UpdateTask(taskItemEntity: taskItemEntity));
-    Helper.showCustomSnackBar(
-      context,
-      content: isCompleted ? 'انتقال به انجام شده' : 'بازگشت به درحال انجام',
-      bgColor: AppTheme.greenPastel,
-    );
-  }
-
   void _deleteCategory(
       {required TaskCategoryItemEntity taskCategoryItemEntity}) {
     showDialog<bool>(
@@ -990,7 +823,7 @@ class _DashboardPageState extends State<DashboardPage>
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("حذف تسک", style: AppTheme.headline3),
+            Text("حذف دسته بندی", style: AppTheme.headline3),
             Icon(
                 IconData(taskCategoryItemEntity.icon.icon!.codePoint,
                     fontFamily: 'MaterialIcons'),
@@ -1037,8 +870,8 @@ class _DashboardPageState extends State<DashboardPage>
                   .add(DeleteTaskCategory(id: taskCategoryItemEntity.id!));
               Helper.showCustomSnackBar(
                 context,
-                content: 'حذف با موفقیت انجام شد',
-                bgColor: AppTheme.redPastel.lighter(30),
+                content:
+                    ' دسته بندی ${taskCategoryItemEntity.title} حذف با موفقیت انجام شد ',
               );
               Navigator.pop(context);
               Navigator.pop(context);
@@ -1062,7 +895,4 @@ class _DashboardPageState extends State<DashboardPage>
       }
     });
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }

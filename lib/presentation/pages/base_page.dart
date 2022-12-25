@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:task_par/presentation/pages/calendar_page.dart';
 import 'package:task_par/presentation/pages/dashboard_page.dart';
@@ -27,6 +26,7 @@ class _BasePageState extends State<BasePage> {
       ];
 
   _onItemTapped(int index) {
+    FocusScope.of(context).unfocus();
     setState(() {
       _currentBody = index;
     });

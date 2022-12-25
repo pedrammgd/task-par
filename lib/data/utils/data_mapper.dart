@@ -73,7 +73,7 @@ class DataMapper {
         taskCategoryList: categories
             .map(
               (item) => TaskCategoryItemEntity(
-                icon: Icon(IconData(item.icon)),
+                icon: Icon(IconData(item.icon, fontFamily: 'MaterialIcons')),
                 backgroundColor: Color(item.backgroundColor),
                 id: item.id,
                 title: item.title,
@@ -91,7 +91,7 @@ class DataMapper {
   static TaskCategoryItemEntity toTaskCategoryItemEntity(
           TaskCategory category) =>
       TaskCategoryItemEntity(
-        icon: Icon(IconData(category.icon)),
+        icon: Icon(IconData(category.icon, fontFamily: 'MaterialIcons')),
         backgroundColor: Color(category.backgroundColor),
         id: category.id,
         title: category.title,

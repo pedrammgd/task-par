@@ -1,9 +1,6 @@
 import 'package:auto_animated/auto_animated.dart';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_color/flutter_color.dart';
 import 'package:liquid_progress_indicator/liquid_progress_indicator.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:task_par/data/entities/task_category_entity.dart';
@@ -41,6 +38,7 @@ class _DetailCategoryTaskPageState extends State<DetailCategoryTaskPage> {
   @override
   void initState() {
     context.read<TaskBloc>().add(WatchTaskByCategory(id: categoryItem.id!));
+
     super.initState();
   }
 
@@ -107,40 +105,37 @@ class _DetailCategoryTaskPageState extends State<DetailCategoryTaskPage> {
             tag: index.toString(),
             title: categoryItem.title,
             actions: [
-              if (categoryItem.id != 0 &&
-                  categoryItem.id != 1 &&
-                  categoryItem.id != 2)
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 22,
-                    color: backColorBri,
-                  ),
-                  iconSize: 20,
-                  elevation: 10,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: Colors.white, width: 1),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'ویرایش') {
-                      _onTapAddOrEditCategory(
-                          category: categoryItem, isEditing: true);
-                    } else {
-                      _deleteCategory(taskCategoryItemEntity: categoryItem);
-                    }
-                  },
-                  itemBuilder: (context) => ['ویرایش', 'حذف']
-                      .map((e) => PopupMenuItem<String>(
-                            value: e,
-                            child: Text(
-                              e,
-                              style: TextStyle(
-                                  color: e == 'حذف' ? Colors.red : null),
-                            ),
-                          ))
-                      .toList(),
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  size: 22,
+                  color: backColorBri,
                 ),
+                iconSize: 20,
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Colors.white, width: 1),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                onSelected: (value) {
+                  if (value == 'ویرایش') {
+                    _onTapAddOrEditCategory(
+                        category: categoryItem, isEditing: true);
+                  } else {
+                    _deleteCategory(taskCategoryItemEntity: categoryItem);
+                  }
+                },
+                itemBuilder: (context) => ['ویرایش', 'حذف']
+                    .map((e) => PopupMenuItem<String>(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: TextStyle(
+                                color: e == 'حذف' ? Colors.red : null),
+                          ),
+                        ))
+                    .toList(),
+              ),
             ],
             // gradient: categoryItem.backgroundColor,
             gradient: categoryItem.backgroundColor,
@@ -254,7 +249,10 @@ class _DetailCategoryTaskPageState extends State<DetailCategoryTaskPage> {
                 } else if (snapshot.data!.taskWithCategoryList.isEmpty) {
                   return EmptyWidget();
                 } else {
-                  return taskListView(snapshot.data!);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 64.0),
+                    child: taskListView(snapshot.data!),
+                  );
                 }
               },
             );
@@ -286,76 +284,106 @@ class _DetailCategoryTaskPageState extends State<DetailCategoryTaskPage> {
       {required TaskCategoryItemEntity taskCategoryItemEntity}) {
     showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("حذف تسک", style: AppTheme.headline3),
-            Icon(
-                IconData(taskCategoryItemEntity.icon.icon!.codePoint,
-                    fontFamily: 'MaterialIcons'),
-                color: taskCategoryItemEntity.backgroundColor),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GarbageWidget(),
-            SizedBox(height: 20),
-            Row(
-              children: [
-                Text(
-                  'آیا از حذف',
+      builder: (context) => ValueListenableBuilder<int>(
+          valueListenable: totalTasks,
+          builder: (BuildContext context, int value, Widget? child) {
+            if (value != 0)
+              return AlertDialog(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("اخطار !!!!!!!",
+                        style: AppTheme.headline3.copyWith(color: Colors.red)),
+                    Icon(
+                        IconData(taskCategoryItemEntity.icon.icon!.codePoint,
+                            fontFamily: 'MaterialIcons'),
+                        color: taskCategoryItemEntity.backgroundColor),
+                  ],
+                ),
+                content: Text(
+                  'برای حذف این دسته بندی اول باید یکی یکی تسک های داخلش رو پاک کنی',
                   style: AppTheme.text1,
                 ),
-                Flexible(
-                  child: Text(
-                    ' ${taskCategoryItemEntity.title}',
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTheme.text1.copyWith(color: Colors.red),
-                  ),
-                ),
-                Text(
-                  ' مطمعن هستید',
-                  style: AppTheme.text1,
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                'بیخیال',
-                style: AppTheme.text1,
-              )),
-          TextButton(
-            onPressed: () {
-              context
-                  .read<TaskCategoryBloc>()
-                  .add(DeleteTaskCategory(id: taskCategoryItemEntity.id!));
-              Helper.showCustomSnackBar(
-                context,
-                content: 'حذف با موفقیت انجام شد',
-                bgColor: AppTheme.redPastel.lighter(30),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'باشه',
+                        style: AppTheme.text1,
+                      )),
+                ],
               );
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Text(
-              'حذف',
-              style: AppTheme.text1.copyWith(color: Colors.red),
-            ),
-          ),
-        ],
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        clipBehavior: Clip.antiAlias,
-      ),
+            else
+              return AlertDialog(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("حذف دسته بندی", style: AppTheme.headline3),
+                    Icon(
+                        IconData(taskCategoryItemEntity.icon.icon!.codePoint,
+                            fontFamily: 'MaterialIcons'),
+                        color: taskCategoryItemEntity.backgroundColor),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GarbageWidget(),
+                    SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Text(
+                          'آیا از حذف',
+                          style: AppTheme.text1,
+                        ),
+                        Flexible(
+                          child: Text(
+                            ' ${taskCategoryItemEntity.title}',
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTheme.text1.copyWith(color: Colors.red),
+                          ),
+                        ),
+                        Text(
+                          ' مطمعن هستید',
+                          style: AppTheme.text1,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        'بیخیال',
+                        style: AppTheme.text1,
+                      )),
+                  TextButton(
+                    onPressed: () {
+                      context.read<TaskCategoryBloc>().add(
+                          DeleteTaskCategory(id: taskCategoryItemEntity.id!));
+                      Helper.showCustomSnackBar(
+                        context,
+                        content:
+                            ' دسته بندی ${taskCategoryItemEntity.title} حذف با موفقیت انجام شد ',
+                      );
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'حذف',
+                      style: AppTheme.text1.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
+                insetPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 24.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                clipBehavior: Clip.antiAlias,
+              );
+          }),
     ).then((isDelete) {
       if (isDelete != null && isDelete) {
         Navigator.pop(context);
