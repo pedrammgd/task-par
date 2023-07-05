@@ -180,7 +180,8 @@ class _DashboardPageState extends State<DashboardPage> {
               height: 50,
               fit: BoxFit.contain,
               loadSubscriptionWidget(
-                  subscriptionData: getStorage.read(Keys.subscriptionKey))),
+                  subscriptionData: getStorage.read(Keys.subscriptionKey) ??
+                      'assets/img/coffee-cup.png')),
         ],
       ),
     );

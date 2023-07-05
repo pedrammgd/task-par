@@ -1,19 +1,17 @@
-// import 'dart:convert';
 // import 'dart:developer';
 // import 'dart:math' as math;
 //
 // import 'package:animate_do/animate_do.dart';
-// import 'package:device_apps/device_apps.dart';
-// import 'package:factor_flutter_mobile/core/constans/constans.dart';
-// import 'package:factor_flutter_mobile/models/factor_product_model/factor_product_model.dart';
-// import 'package:factor_flutter_mobile/models/factor_view_model/factor_view_model.dart';
-// import 'package:factor_flutter_mobile/views/shared/widgets/factor_app_bar.dart';
-// import 'package:factor_flutter_mobile/views/shared/widgets/factor_snack_bar.dart';
-// import 'package:factor_flutter_mobile/views/shared/widgets/subscription_card_widget.dart';
+// import 'package:connectivity_plus/connectivity_plus.dart';
+//
 // import 'package:flutter/material.dart';
 // import 'package:flutter_poolakey/flutter_poolakey.dart';
-// import 'package:get/get.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:get_storage/get_storage.dart';
+// import 'package:task_par/data/models/factor_product_model/factor_product_model.dart';
+// import 'package:task_par/presentation/utils/constants.dart';
+// import 'package:task_par/presentation/widgets/subscription_card.dart';
+// import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+// import 'package:top_snackbar_flutter/top_snack_bar.dart';
 //
 // class BazzarSubscriptionPage extends StatefulWidget {
 //   const BazzarSubscriptionPage({Key? key}) : super(key: key);
@@ -38,18 +36,27 @@
 //   void initState() {
 //     super.initState();
 //     _initShop(0);
+//     initGetStorage();
+//     connectionInternet();
+//   }
 //
-//     initSharedPreferences();
+//   Future connectionInternet() async {
+//     var connectivityResult = await (Connectivity().checkConnectivity());
+//     if (connectivityResult == ConnectivityResult.mobile ||
+//         connectivityResult == ConnectivityResult.wifi) {
+//       isLoading = true;
+//     }
 //   }
 //
 //   Future<void> _initShop(int tryCount) async {
-//     _productsMap["bronze_buy"] = ProductItem(bronzeCupIcon, false);
-//     _productsMap["silver"] = ProductItem(silverCupIcon, false);
-//     _productsMap["gold"] = ProductItem(goldCupIcon, false);
+//     _productsMap["bronze_buy"] =
+//         ProductItem('assets/img/bronze-cup.png', false);
+//     _productsMap["silver"] = ProductItem('assets/img/silver-cup.png', false);
+//     _productsMap["gold"] = ProductItem('assets/img/gold_cup.png', false);
 //
 //     var message = "pedram";
 //     var rsaKey =
-//         "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwC3GmsXxlUYD9F//22IBEBUBBZ2I4BsDzxjfMc/6eGS7iYt4jhExxoiX3dBsrPrr0MXoZ3ZYZW4KzxiFgXix1CVYEDu6OUXTOuzDz8hFvZYBykfg39EH4g5zrBi6weUA0do0A6IYpD7RwNOaHFqX2G+zpjzTHYUKjLcIr+bohSdiCpK6saqfbgAbheWXHkujyDktd3+aCo6ylvlxO8HpAjfTEMPS39adCnM9Uw5FCcCAwEAAQ==";
+//         "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwDw8GXghtv138eIzcJ8ddtySzrNsrVWe3El9K75FK2aIh6+ufnuah7pmVYPJPQLs8+dK87d3Lm1uWrQCsrjdis+RjxDS1qWZ7Dsg4qUUdiXTQhgTuxLarNT276GOw1nVOYsGwDoc0CZkYNPLvPJ9dv97zrbGans54iFz6K2KDmzaanvCjVUJRi2a9SFRLgNL+SYm9NA9QESElnnlyHXWMoGFImv/i5eyA6WEFx8I+8CAwEAAQ==";
 //     bool connected = false;
 //     try {
 //       connected = await FlutterPoolakey.connect(rsaKey, onDisconnected: () {
@@ -116,16 +123,12 @@
 //       isLoading = false;
 //     } catch (e) {
 //       if (tryCount < 1) {
-//         FactorSnackBar.getxSnackBar(
-//             duration: const Duration(seconds: 5),
-//             title: 'خطا در اتصال به حساب کافه بازار',
-//             message: 'ابتدا از اتصال خود به کافه بازار مطمعن شوید',
-//             backgroundColor: redColor,
-//             mainButton: TextButton(
-//                 onPressed: () async {
-//                   DeviceApps.openApp('com.farsitel.bazaar');
-//                 },
-//                 child: const Text('ورود به کافه بازار')));
+//         showTopSnackBar(
+//           Overlay.of(context)!,
+//           CustomSnackBar.error(
+//             message: 'ابتدا از اتصال حساب خود به کافه بازار مطمعن شوید',
+//           ),
+//         );
 //       }
 //       isEnterToBazar = false;
 //       print(e.toString());
@@ -166,45 +169,29 @@
 //   //   }
 //   // }
 //
-//   final RxList<FactorHomeViewModel> factorHomeList =
-//       <FactorHomeViewModel>[].obs;
-//   late SharedPreferences sharedPreferences;
+//   GetStorage getStorage = GetStorage();
+//   String subscriptionValue = '';
 //
-//   initSharedPreferences() {
+//   initGetStorage() {
 //     // isLoading.value = true;
 //     Future.delayed(const Duration(milliseconds: 500), () async {
-//       sharedPreferences = await SharedPreferences.getInstance();
-//       loadFactorData();
+//       // sharedPreferences = await SharedPreferences.getInstance();
+//
 //       loadSubscription();
 //       // isLoading.value = false;
 //     });
 //   }
 //
-//   void loadFactorData() {
-//     List<String> factorDataList =
-//         sharedPreferences.getStringList(factorHomeListSharedPreferencesKey) ??
-//             [];
-//     if (factorDataList.isNotEmpty) {
-//       factorHomeList.value = factorDataList
-//           .map((e) => FactorHomeViewModel.fromJson(json.decode(e)))
-//           .toList();
-//     }
-//     // log('factorDataList${factorDataList}');
-//   }
-//
 //   void saveSubscription(String value) {
-//     sharedPreferences.setString(subscriptionSharedPreferencesKey, value);
+//     getStorage.write(Keys.subscriptionKey, value);
 //   }
-//
-//   String subscriptionValue = '';
 //
 //   void loadSubscription() {
-//     String subscriptionData =
-//         sharedPreferences.getString(subscriptionSharedPreferencesKey) ?? '';
+//     String subscriptionData = getStorage.read(Keys.subscriptionKey) ?? '';
 //     if (subscriptionData.isNotEmpty) {
 //       subscriptionValue = subscriptionData;
 //     }
-//     log('loadSubscriptionsssssss${subscriptionData}');
+//     log('loadSubsc${subscriptionData}');
 //   }
 //
 //   @override
@@ -212,65 +199,67 @@
 //     final items = _productsMap.values.toList();
 //     return WillPopScope(
 //       onWillPop: () async {
-//         Get.back(result: true);
 //         isEnterToBazar = true;
 //         return true;
 //       },
 //       child: Scaffold(
-//         appBar: FactorAppBar(
-//             title: Padding(
-//               padding: const EdgeInsets.only(top: 12),
-//               child: Text(
-//                 'اشتراک',
-//                 style:
-//                     TextStyle(color: Theme.of(context).colorScheme.secondary),
-//               ),
-//             ),
-//             customBackButtonFunction: () {
-//               Get.back(result: true);
-//               isEnterToBazar = true;
-//             }),
-//         body: Padding(
-//             padding: const EdgeInsets.only(top: 20),
-//             child:
-//                 // isEnterToBazar
-//                 //     ?
-//                 _listViewBuilder(items)
-//             // : FadeInRight(
-//             //     child: SingleChildScrollView(
-//             //       child: Column(
-//             //         crossAxisAlignment: CrossAxisAlignment.center,
-//             //         children: [
-//             //           Image.asset(
-//             //             bazarIcon,
-//             //             width: 200,
-//             //             height: 150,
-//             //             fit: BoxFit.contain,
-//             //           ),
-//             //           const Padding(
-//             //             padding: EdgeInsets.all(8.0),
-//             //             child: Text(
-//             //               'خطا در ارتباط با اینترنت یا کافه بازار جهت خرید یا ارتقا اشتراک خود،ابتدا وارد حساب کاربری خود در کافه بازار شوید',
-//             //               textAlign: TextAlign.center,
-//             //               style: TextStyle(fontSize: 18),
-//             //             ),
-//             //           ),
-//             //           const Text(
-//             //             'خروج از این صفحه ، بعد از 5 ثانیه',
-//             //             style: TextStyle(color: Colors.red),
-//             //           ),
-//             //         ],
-//             //       ),
-//             //     ),
-//             //   ),
-//             ),
-//       ),
+//           // appBar: FactorAppBar(
+//           //     title: Padding(
+//           //       padding: const EdgeInsets.only(top: 12),
+//           //       child: Text(
+//           //         'اشتراک',
+//           //         style:
+//           //             TextStyle(color: Theme.of(context).colorScheme.secondary),
+//           //       ),
+//           //     ),
+//           //     customBackButtonFunction: () {
+//           //       Get.back(result: true);
+//           //       isEnterToBazar = true;
+//           //     }),
+//           body:
+//               // Padding(
+//               //     padding: const EdgeInsets.only(top: 20),
+//               //     child:
+//               // isEnterToBazar
+//               //     ?
+//               _listViewBuilder(items)
+//           // : FadeInRight(
+//           //     child: SingleChildScrollView(
+//           //       child: Column(
+//           //         crossAxisAlignment: CrossAxisAlignment.center,
+//           //         children: [
+//           //           Image.asset(
+//           //             bazarIcon,
+//           //             width: 200,
+//           //             height: 150,
+//           //             fit: BoxFit.contain,
+//           //           ),
+//           //           const Padding(
+//           //             padding: EdgeInsets.all(8.0),
+//           //             child: Text(
+//           //               'خطا در ارتباط با اینترنت یا کافه بازار جهت خرید یا ارتقا اشتراک خود،ابتدا وارد حساب کاربری خود در کافه بازار شوید',
+//           //               textAlign: TextAlign.center,
+//           //               style: TextStyle(fontSize: 18),
+//           //             ),
+//           //           ),
+//           //           const Text(
+//           //             'خروج از این صفحه ، بعد از 5 ثانیه',
+//           //             style: TextStyle(color: Colors.red),
+//           //           ),
+//           //         ],
+//           //       ),
+//           //     ),
+//           //   ),
+//           // ),
+//           ),
 //     );
 //   }
 //
 //   FadeInRight _listViewBuilder(List<ProductItem> items) {
 //     return FadeInRight(
 //       child: ListView.builder(
+//         shrinkWrap: true,
+//         physics: NeverScrollableScrollPhysics(),
 //         itemCount: items.length,
 //         itemBuilder: (context, index) {
 //           return _itemListSub(index, items);
@@ -296,18 +285,12 @@
 //         onTap: () async {
 //           print('whhhhh${items[index].skuDetails}');
 //           if (!isEnterToBazar) {
-//             FactorSnackBar.getxSnackBar(
-//                 duration: const Duration(seconds: 5),
-//                 title: 'خطا در اتصال به حساب کافه بازار',
-//                 message: 'ابتدا از اتصال خود به کافه بازار مطمعن شوید',
-//                 backgroundColor: redColor,
-//                 mainButton: TextButton(
-//                     onPressed: () async {
-//                       DeviceApps.openApp('com.farsitel.bazaar');
-//
-//                       // await DeviceApps.openAppSettings('com.farsitel.bazaar');
-//                     },
-//                     child: const Text('ورود به کافه بازار')));
+//             showTopSnackBar(
+//               Overlay.of(context)!,
+//               CustomSnackBar.error(
+//                 message: 'ابتدا از اتصال حساب خود به کافه بازار مطمعن شوید',
+//               ),
+//             );
 //           }
 //           if (items[index].skuDetails == null) return;
 //           // if (index == 0 && subscriptionValue == 'silver') {
@@ -326,17 +309,18 @@
 //                 await FlutterPoolakey.purchase(items[index].skuDetails!.sku);
 //             saveSubscription(items[index].skuDetails!.sku);
 //             // _handlePurchase(purchaseInfo);
-//             Get.back(result: true);
-//             Get.snackbar(
-//               'عملیات موفق',
-//               '${items[index].skuDetails?.title} برای شما فعال شد ',
-//               backgroundColor: greenColor,
+//             showTopSnackBar(
+//               Overlay.of(context)!,
+//               CustomSnackBar.success(
+//                 message: '${items[index].skuDetails?.title} برای شما فعال شد ',
+//               ),
 //             );
 //           } catch (e) {
-//             FactorSnackBar.getxSnackBar(
-//               title: 'خرید ناموفق',
-//               message: 'خرید ناموفق مجددا تلاش کنید',
-//               backgroundColor: redColor,
+//             showTopSnackBar(
+//               Overlay.of(context)!,
+//               CustomSnackBar.error(
+//                 message: 'خرید ناموفق مجددا تلاش کنید',
+//               ),
 //             );
 //
 //             return;
@@ -344,3 +328,7 @@
 //         });
 //   }
 // }
+//
+// Color goldColor = const Color(0xffffd700);
+// Color silverColor = const Color(0xffc0c0c0);
+// Color bronzeColor = const Color(0xffcd7032);

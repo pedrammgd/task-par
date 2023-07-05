@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:iran_appmarket/iran_appmarket.dart';
-import 'package:myket_iap/myket_iap.dart';
+
 // import 'package:myket_flutter/myket_flutter.dart';
 import 'package:random_avatar/random_avatar.dart';
+import 'package:task_par/presentation/pages/subscription/bazzar_subscription_page.dart';
 import 'package:task_par/presentation/pages/subscription/my_ket_subscription_page.dart';
 import 'package:task_par/presentation/utils/app_theme.dart';
 import 'package:task_par/presentation/utils/constants.dart';
@@ -96,6 +97,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               SizedBox(height: 420, child: MyKetSubscriptionPage()),
+              // SizedBox(height: 420, child: BazzarSubscriptionPage()),
 
               SubscriptionCardWidget(
                   isLoading: false,
@@ -120,6 +122,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       // IAppMarket.ofType(AppMarket.myket).showAppPage(packageName);
                       IranAppMarket.showDeveloperApps(
                           AppMarket.myket, 'com.example.factor_flutter_mobile');
+                      // IranAppMarket.showDeveloperApps(
+                      //     AppMarket.cafeBazaar, '568414623994');
                       // MyketFlutter.downloadApplication(
                       //     "com.example.factor_flutter_mobile");
                     }

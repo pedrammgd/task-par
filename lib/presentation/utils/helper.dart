@@ -77,7 +77,7 @@ class Helper {
         topRadius: Radius.circular(20),
         backgroundColor: Colors.transparent,
         builder: (context) => SizedBox(
-            width: 400,
+            width: 300,
             child: ProfilePage(
               isBottomSheet: true,
             )),
@@ -95,13 +95,13 @@ class Helper {
     }
 
     if (getStorageStatic.read(Keys.subscriptionKey) == 'bronze_buy') {
-      if (getStorageStatic.read(Keys.listTaskKey).length ?? 0 >= 29) {
+      if (getStorageStatic.read(Keys.listTaskKey).length >= 29) {
         return false;
       } else {
         return true;
       }
     } else if (getStorageStatic.read(Keys.subscriptionKey) == 'silver') {
-      if (getStorageStatic.read(Keys.listTaskKey).length ?? 0 >= 59) {
+      if (getStorageStatic.read(Keys.listTaskKey).length >= 59) {
         return false;
       } else {
         return true;

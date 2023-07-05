@@ -67,7 +67,8 @@ class _TaskItemWidgetState extends State<TaskItemWidget> {
                         child: Padding(
                       padding: const EdgeInsets.fromLTRB(0, 16, 24, 0),
                       child: Text(widget.task.title,
-                          overflow: TextOverflow.ellipsis,
+                          overflow: TextOverflow.clip,
+                          maxLines: 1,
                           style: AppTheme.headline4),
                     )),
                     // Padding(
@@ -86,9 +87,12 @@ class _TaskItemWidgetState extends State<TaskItemWidget> {
                         SizedBox(
                           height: 8,
                         ),
-                        Text(widget.task.description,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTheme.text4),
+                        SizedBox(
+                          child: Text(widget.task.description,
+                              overflow: TextOverflow.clip,
+                              maxLines: 2,
+                              style: AppTheme.text4),
+                        ),
                         SizedBox(
                           height: 8,
                         ),

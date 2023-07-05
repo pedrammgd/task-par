@@ -1,9 +1,11 @@
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
-
+import 'package:shamsi_date/shamsi_date.dart' as shamsi;
 import 'package:task_par/data/entities/task_category_entity.dart';
 import 'package:task_par/data/entities/task_entity.dart';
 import 'package:task_par/data/entities/task_with_category_entity.dart';
@@ -13,7 +15,6 @@ import 'package:task_par/presentation/utils/app_theme.dart';
 import 'package:task_par/presentation/utils/constants.dart';
 import 'package:task_par/presentation/utils/extensions.dart';
 import 'package:task_par/presentation/utils/helper.dart';
-import 'package:shamsi_date/shamsi_date.dart' as shamsi;
 
 import 'buttons.dart';
 import 'state_widgets.dart';
@@ -38,12 +39,13 @@ class _TaskSheetState extends State<TaskSheet> {
   TextEditingController descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   late int? selectedCategory = widget.categoryId ?? null;
+
   // Jalali? datePicked;
   DateTime? datePicked;
   TimeOfDay? timePicked;
   bool isCompleted = false;
   bool isEdited = false;
-  GetStorage getStorage = GetStorage();
+  static GetStorage getStorage = GetStorage();
   List countTasks = [];
 
   @override
@@ -134,7 +136,7 @@ class _TaskSheetState extends State<TaskSheet> {
   //   });
   // }
 
-  _updateTask() {
+  _updateTask() async {
     if (_formKey.currentState!.validate()) {
       TaskItemEntity taskItemEntity = TaskItemEntity(
         id: taskItem.id,
@@ -168,17 +170,50 @@ class _TaskSheetState extends State<TaskSheet> {
         content: ' تسک ${taskItem.title} با موفقیت ویرایش شد ',
       );
       Navigator.pop(context);
+      if (datePicked != null)
+        await AndroidAlarmManager.oneShotAt(
+            DateTime(datePicked!.year, datePicked!.month, datePicked!.day,
+                timePicked!.hour, timePicked!.minute - 10),
+            // Ensure we have a unique alarm ID.
+            idAlarm,
+            _fn10MAlarm,
+            rescheduleOnReboot: true,
+            wakeup: true,
+            alarmClock: true);
+      if (datePicked != null)
+        await AndroidAlarmManager.oneShotAt(
+            DateTime(datePicked!.year, datePicked!.month, datePicked!.day,
+                timePicked!.hour, timePicked!.minute),
+            // Ensure we have a unique alarm ID.
+            idAlarm2,
+            _fnNowAlarm,
+            rescheduleOnReboot: true,
+            wakeup: true,
+            alarmClock: true);
     }
   }
 
-  _saveTask() {
+  final int idAlarm = 0;
+  final int idAlarm2 = 1;
+
+  @pragma('vm:entry-point')
+  static void _fnNowAlarm() {
+    _showNotification('الان تسک برای انجام داری');
+  }
+
+  @pragma('vm:entry-point')
+  static void _fn10MAlarm() {
+    _showNotification('کمتر از ده دقیقه دیگه تسک داری');
+  }
+
+  _saveTask() async {
     if (_formKey.currentState!.validate()) {
       TaskItemEntity taskItemEntity = TaskItemEntity(
         title: titleController.text,
         description: descriptionController.text,
         categoryId: selectedCategory!,
       );
-      if (datePicked != null) {
+      if (datePicked != null && timePicked != null) {
         final DateTime savedDeadline = DateTime(
           datePicked?.year ?? DateTime.now().year,
           datePicked?.month ?? DateTime.now().month,
@@ -197,12 +232,53 @@ class _TaskSheetState extends State<TaskSheet> {
       context.read<TaskBloc>().add(InsertTask(taskItemEntity: taskItemEntity));
       Helper.showCustomSnackBar(
         context,
-        content: ' تسک ${titleController.text} تسک با موفقیت افزوده شد ',
+        content: ' تسک ${titleController.text} با موفقیت افزوده شد ',
       );
       countTasks.add(1);
       getStorage.write(Keys.listTaskKey, countTasks);
       Navigator.pop(context);
+
+      if (datePicked != null)
+        await AndroidAlarmManager.oneShotAt(
+            DateTime(datePicked!.year, datePicked!.month, datePicked!.day,
+                timePicked!.hour, timePicked!.minute - 10),
+            // Ensure we have a unique alarm ID.
+            idAlarm,
+            _fn10MAlarm,
+            rescheduleOnReboot: true,
+            wakeup: true,
+            alarmClock: true);
+      if (datePicked != null)
+        await AndroidAlarmManager.oneShotAt(
+            DateTime(datePicked!.year, datePicked!.month, datePicked!.day,
+                timePicked!.hour, timePicked!.minute),
+            // Ensure we have a unique alarm ID.
+            idAlarm2,
+            _fnNowAlarm,
+            rescheduleOnReboot: true,
+            wakeup: true,
+            alarmClock: true);
     }
+  }
+
+  static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  static Future<void> _showNotification(String value) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('default_notification_channel_id', 'Default',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('notification'));
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+        0,
+        '${getStorage.read(Keys.myNameKey) ?? ''} یادت نره ',
+        value,
+        platformChannelSpecifics,
+        payload: 'item x');
   }
 
   _getDate() async {

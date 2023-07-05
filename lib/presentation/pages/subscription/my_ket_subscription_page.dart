@@ -134,7 +134,8 @@ class _MyKetSubscriptionPageState extends State<MyKetSubscriptionPage> {
         return;
       }
       saveSubscription(purchase.mSku);
-      Navigator.pop(context, true);
+      print('purchase.mSku${purchase.mSku}');
+      // Navigator.pop(context, true);
 
       showTopSnackBar(
         Overlay.of(context)!,
@@ -246,7 +247,7 @@ class _MyKetSubscriptionPageState extends State<MyKetSubscriptionPage> {
       case 1:
         return '59 تسک به صورت دائمی و دسته بندی نامحدود بدون اشتراک سالانه';
       default:
-        return 'بینهایت فاکتور به صورت دائمی و مشتریان نامحدود بدون اشتراک سالانه + حذف تبلیغات';
+        return 'بینهایت تسک به صورت دائمی و دسته بندی نامحدود بدون اشتراک سالانه + حذف تبلیغات';
     }
   }
 
